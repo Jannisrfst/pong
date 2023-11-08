@@ -1,0 +1,164 @@
+import turtle
+import random
+import time
+
+class AIBehavior:
+    def move_paddle(self, paddle, ball):
+        pass
+
+class HardAI(AIBehavior):
+    def move_paddle(self, paddle, ball):
+        follow_probability = 0.25
+        if random.random() < follow_probability:
+            if ball.ycor() > paddle.ycor():
+                new_y = paddle.ycor() + 0.08
+            elif ball.ycor() < paddle.ycor():
+                new_y = paddle.ycor() - 0.08
+            else:
+                new_y = paddle.ycor()
+            paddle.sety(new_y)
+
+class MediumAI(AIBehavior):
+    def move_paddle(self, paddle, ball):
+        target_y = ball.ycor()
+        target_y = max(-290, min(target_y, 290))
+        paddle.sety(target_y)
+
+class EasyAI(AIBehavior):
+    def move_paddle(self, paddle, ball):
+        target_y = paddle.ycor()
+        if ball.ycor() > target_y:
+            target_y += 0.2
+        elif ball.ycor() < target_y:
+            target_y -= 0.2
+        target_y = max(-290, min(target_y, 290))
+        paddle.sety(target_y)
+
+def start_botpong_game(difficulty="medium"):
+    window = turtle.Screen()
+    window.title("Pong")
+    window.setup(width=800, height=600)
+    window.bgcolor("black")
+    window.tracer(0)
+    custom_font = ("Verdana", 18, "normal")
+
+    class Paddle(turtle.Turtle):
+        def __init__(self, x, y):
+            super().__init__()
+            self.speed(0)
+            self.shape("square")
+            self.shapesize(stretch_wid=6, stretch_len=1)
+            self.penup()
+            self.color("white")
+            self.goto(x, y)
+
+    class Ball(turtle.Turtle):
+        def __init__(self):
+            super().__init__()
+            self.speed(0)
+            self.shape("circle")
+            self.penup()
+            self.color("white")
+            self.goto(0, 0)
+            self.dx = 0.4
+            self.dy = -0.4
+            self.speed_level = 1
+            
+        def increase_speed(self):
+            speed_level = self.speed_level
+            if speed_level < 3:
+                speed_level += 1
+                self.dx *= 1.05
+                self.dy *= 1.05
+            self.speed_level = speed_level
+
+    paddle1 = Paddle(-350, 0)
+    paddle2 = Paddle(350, 0)
+    ball = Ball()
+
+    if difficulty == "1":
+        ai_behavior = MediumAI()
+    elif difficulty == "2":
+        ai_behavior = EasyAI()
+    elif difficulty == "3":
+        ai_behavior = HardAI()
+
+    score1 = 0
+    score2 = 0
+
+    scb = turtle.Turtle()
+    scb.shape("square")
+    scb.color("white")
+    scb.penup()
+    scb.hideturtle()
+    scb.goto(0, 260)
+    scb.write("Player 1: 0  Player 2: 0", align="center", font=custom_font)
+
+    def paddle1_up():
+        y = paddle1.ycor()
+        y += 30
+        paddle1.sety(y)
+
+    def paddle1_down():
+        y = paddle1.ycor()
+        y -= 30
+        paddle1.sety(y)
+
+    def paddle2_up():
+        y = paddle2.ycor()
+        y += 30
+        paddle2.sety(y)
+
+    def paddle2_down():
+        y = paddle2.ycor()
+        y -= 30
+        paddle2.sety(y)
+
+    window.listen()
+    window.onkeypress(paddle1_up, "w")
+    window.onkeypress(paddle1_down, "s")
+    window.onkeypress(paddle2_up, "Up")
+    window.onkeypress(paddle2_down, "Down")
+
+    while True:
+        window.update()
+        ball.setx(ball.xcor() + ball.dx)
+        ball.sety(ball.ycor() + ball.dy)
+
+        ai_behavior.move_paddle(paddle2, ball)
+
+        if ball.ycor() > 290 or ball.ycor() < -290:
+            ball.dy *= -1
+
+        if (ball.xcor() > paddle2.xcor() - 10 and ball.xcor() < paddle2.xcor() + 10) and \
+           (paddle2.ycor() + 50 > ball.ycor() > paddle2.ycor() - 50):
+            ball.setx(paddle2.xcor() - 10)
+            ball.dx *= -1
+
+        if (ball.xcor() < paddle1.xcor() + 10 and ball.xcor() > paddle1.xcor() - 10) and \
+           (paddle1.ycor() + 50 > ball.ycor() > paddle1.ycor() - 50):
+            ball.setx(paddle1.xcor() + 10)
+            ball.dx *= -1
+
+        if ball.xcor() > 390:
+            ball.goto(0, 0)
+            ball.dx *= -1
+            score1 += 1
+            scb.clear()
+            scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
+
+        if ball.xcor() < -390:
+            ball.goto(0, 0)
+            ball.dx *= -1
+            score2 += 1
+            scb.clear()
+            scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
+                
+        ball.increase_speed()
+
+if __name__ == "__main__":
+    difficulty_level = input("Schwierigkeitsstufe wählen (3 für leicht, 2 für mittel, 1 für schwer): ")
+    if difficulty_level not in ["1", "2", "3"]:
+        print("2 Default.")
+        difficulty_level = "1"
+    start_botpong_game(difficulty_level)
