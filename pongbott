@@ -1,6 +1,7 @@
 import turtle
 import random
 import time
+import math
 
 class AIBehavior:
     def move_paddle(self, paddle, ball):
@@ -131,14 +132,22 @@ def start_botpong_game(difficulty="medium"):
             ball.dy *= -1
 
         if (ball.xcor() > paddle2.xcor() - 10 and ball.xcor() < paddle2.xcor() + 10) and \
-           (paddle2.ycor() + 50 > ball.ycor() > paddle2.ycor() - 50):
-            ball.setx(paddle2.xcor() - 10)
-            ball.dx *= -1
+            (paddle2.ycor() + 50 > ball.ycor() > paddle2.ycor() - 50):
+            relative_intersect_y = (paddle2.ycor() + (50 / 2)) - ball.ycor()
+            normalized_relative_intersect_y = relative_intersect_y / (50 / 2)
+            bounce_angle = normalized_relative_intersect_y * (5 * math.pi / 12)
+
+            ball.dx = 0.4 * math.cos(bounce_angle)
+            ball.dy = -0.4 * math.sin(bounce_angle)
 
         if (ball.xcor() < paddle1.xcor() + 10 and ball.xcor() > paddle1.xcor() - 10) and \
-           (paddle1.ycor() + 50 > ball.ycor() > paddle1.ycor() - 50):
-            ball.setx(paddle1.xcor() + 10)
-            ball.dx *= -1
+            (paddle1.ycor() + 50 > ball.ycor() > paddle1.ycor() - 50):
+            relative_intersect_y = (paddle1.ycor() + (50 / 2)) - ball.ycor()
+            normalized_relative_intersect_y = relative_intersect_y / (50 / 2)
+            bounce_angle = normalized_relative_intersect_y * (5 * math.pi / 12)
+
+            ball.dx = -0.4 * math.cos(bounce_angle)
+            ball.dy = -0.4 * math.sin(bounce_angle)
 
         if ball.xcor() > 390:
             ball.goto(0, 0)
@@ -153,8 +162,9 @@ def start_botpong_game(difficulty="medium"):
             score2 += 1
             scb.clear()
             scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
-                
+    
         ball.increase_speed()
+
 
 if __name__ == "__main__":
     difficulty_level = input("Schwierigkeitsstufe wählen (3 für leicht, 2 für mittel, 1 für schwer): ")
