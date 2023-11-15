@@ -126,6 +126,13 @@ def start_botpong_game(difficulty="medium"):
             score2 += 1 if ball.xcor() < 0 else 0
             scb.clear()
             scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
+            
+        if abs(ball.xcor()) < -390:
+            ball.goto(0, 0)
+            ball.dx *= -1
+            score2 += 1
+            scb.clear()
+            scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
 
         ball.increase_speed()
 
