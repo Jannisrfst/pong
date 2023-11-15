@@ -1,29 +1,40 @@
+# Import necessary libraries
 import turtle
 import random
 import time
 import math
 
+# Define a base class for AI behavior
 class AIBehavior:
+    # Method to move paddle, to be implemented by subclasses
     def move_paddle(self, paddle, ball):
         pass
 
+# Define a class for hard AI behavior
 class HardAI(AIBehavior):
+    # Method to move paddle based on a random probability
     def move_paddle(self, paddle, ball):
         follow_probability = 0.25
         if random.random() < follow_probability:
             new_y = paddle.ycor() + 0.08 if ball.ycor() > paddle.ycor() else paddle.ycor() - 0.08 if ball.ycor() < paddle.ycor() else paddle.ycor()
             paddle.sety(new_y)
 
+# Define a class for medium AI behavior
 class MediumAI(AIBehavior):
+    # Method to move paddle directly towards the ball
     def move_paddle(self, paddle, ball):
         paddle.sety(max(-290, min(ball.ycor(), 290)))
 
+# Define a class for easy AI behavior
 class EasyAI(AIBehavior):
+    # Method to move paddle towards the ball at a slower pace
     def move_paddle(self, paddle, ball):
         target_y = paddle.ycor() + 0.2 if ball.ycor() > paddle.ycor() else paddle.ycor() - 0.2 if ball.ycor() < paddle.ycor() else paddle.ycor()
         paddle.sety(max(-290, min(target_y, 290)))
 
+# Define a class for the paddle
 class Paddle(turtle.Turtle):
+    # Initialize the paddle with its properties
     def __init__(self, x, y):
         super().__init__()
         self.speed(0)
@@ -33,7 +44,9 @@ class Paddle(turtle.Turtle):
         self.color("white")
         self.goto(x, y)
 
+# Define a class for the ball
 class Ball(turtle.Turtle):
+    # Initialize the ball with its properties
     def __init__(self):
         super().__init__()
         self.speed(0)
@@ -45,13 +58,16 @@ class Ball(turtle.Turtle):
         self.dy = -0.4
         self.speed_level = 1
 
+    # Method to increase the speed of the ball
     def increase_speed(self):
         if self.speed_level < 3:
             self.speed_level += 1
             self.dx *= 1.05
             self.dy *= 1.05
 
+# Function to start the game
 def start_botpong_game(difficulty="medium"):
+    # Set up the game window
     window = turtle.Screen()
     window.title("Pong")
     window.setup(width=800, height=600)
@@ -59,15 +75,19 @@ def start_botpong_game(difficulty="medium"):
     window.tracer(0)
     custom_font = ("Verdana", 18, "normal")
 
+    # Create the paddles and the ball
     paddle1 = Paddle(-350, 0)
     paddle2 = Paddle(350, 0)
     ball = Ball()
 
+    # Choose the AI behavior based on the difficulty level
     ai_behavior = MediumAI() if difficulty == "1" else EasyAI() if difficulty == "2" else HardAI() if difficulty == "3" else MediumAI()
 
+    # Initialize the scores
     score1 = 0
     score2 = 0
 
+    # Set up the score display
     scb = turtle.Turtle()
     scb.shape("square")
     scb.color("white")
@@ -76,39 +96,40 @@ def start_botpong_game(difficulty="medium"):
     scb.goto(0, 260)
     scb.write("Player 1: 0  Player 2: 0", align="center", font=custom_font)
 
+    # Define functions to move the paddles up and down
     def paddle_up(paddle):
         paddle.sety(paddle.ycor() + 30)
 
     def paddle_down(paddle):
         paddle.sety(paddle.ycor() - 30)
 
+    # Listen for key presses to move the paddles
     window.listen()
+    # On key press move the paddle up or down
     window.onkeypress(lambda: paddle_up(paddle1), "w")
     window.onkeypress(lambda: paddle_down(paddle1), "s")
     window.onkeypress(lambda: paddle_up(paddle2), "Up")
     window.onkeypress(lambda: paddle_down(paddle2), "Down")
 
+    # Main game loop
     while True:
         window.update()
         ball.setx(ball.xcor() + ball.dx)
         ball.sety(ball.ycor() + ball.dy)
 
+        # Move the AI paddle
         ai_behavior.move_paddle(paddle2, ball)
 
+        # Bounce the ball off the top and bottom edges
         if ball.ycor() > 290 or ball.ycor() < -290:
             ball.dy *= -1
 
+        # Bounce the ball off the paddles
         if (abs(ball.xcor() - paddle2.xcor()) < 10) and (paddle2.ycor() + 50 > ball.ycor() > paddle2.ycor() - 50):
-            # Calculate the relative intersect y
-            # This is the difference between the center of the paddle and the ball
+            # Calculate the bounce angle based on where the ball hit the paddle
             relative_intersect_y = (paddle2.ycor() + (50 / 2)) - ball.ycor()
-            # Normalize the relative intersect y
-            # This is the relative intersect y divided by half the height of the paddle
             normalized_relative_intersect_y = relative_intersect_y / (50 / 2)
-            # Calculate the bounce angle
-            # This is the normalized relative intersect y times the maximum angle of deflection
             bounce_angle = normalized_relative_intersect_y * (5 * math.pi / 12)
-            # Update the ball's direction based on the bounce angle
             ball.dx = 0.4 * math.cos(bounce_angle)
             ball.dy = -0.4 * math.sin(bounce_angle)
 
@@ -119,6 +140,7 @@ def start_botpong_game(difficulty="medium"):
             ball.dx = -0.4 * math.cos(bounce_angle)
             ball.dy = -0.4 * math.sin(bounce_angle)
 
+        # Reset the ball and update the score when a point is scored
         if abs(ball.xcor()) > 390:
             ball.goto(0, 0)
             ball.dx *= -1
@@ -134,11 +156,13 @@ def start_botpong_game(difficulty="medium"):
             scb.clear()
             scb.write(f"Player 1: {score1}  Player 2: {score2}", align="center", font=custom_font)
 
+        # Increase the speed of the ball
         ball.increase_speed()
 
+# Start the game when the script is run
 if __name__ == "__main__":
-    difficulty_level = input("Schwierigkeitsstufe wählen (3 für leicht, 2 für mittel, 1 für schwer): ")
+    difficulty_level = input("Choose difficulty level (3 for easy, 2 for medium, 1 for hard): ")
     if difficulty_level not in ["1", "2", "3"]:
-        print("2 Default.")
+        print("Defaulting to 2.")
         difficulty_level = "1"
     start_botpong_game(difficulty_level)
